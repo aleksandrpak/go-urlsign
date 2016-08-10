@@ -6,6 +6,8 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+
+	"golang.org/x/crypto/ssh"
 )
 
 func VerifierFromString(publicKey string) (*Verifier, error) {
@@ -19,7 +21,12 @@ func VerifierFromBytes(publicKey []byte) (*Verifier, error) {
 func parsePublicKey(bytes []byte) (*Verifier, error) {
 	block, _ := pem.Decode(bytes)
 	if block == nil {
-		return nil, errors.New("no key found")
+		key, err := ssh.ParsePublicKey(bytes)
+		if err != nil {
+			return nil, errors.New("no key found")
+		}
+
+		return &Verifier{&sshPublicKey{key}}, nil
 	}
 
 	var rawkey interface{}
